@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # Frontend UI with NiceGUI
+  frontend:
+    build:
+      context: ./src/ui/dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - ORCHESTRATOR_URL=http://orchestrator:5000
+    depends_on:
+      - orchestrator
+    volumes:
+      - ./src/ui/dashboard:/app
+    restart: unless-stopped
+
+  # Orchestrator Agent
+  orchestrator:
+    build:
+      context: ./src/agents/orchestrator
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - ODOO_URL=${ODOO_URL}
+      - ODOO_DB=${ODOO_DB}
+      - ODOO_USERNAME=${ODOO_USERNAME}
+      - ODOO_API_KEY=${ODOO_API_KEY}
+    volumes:
+      - ./src/agents/orchestrator:/app
+    restart: unless-stopped
+
+  # Researcher Agent
+  researcher:
+    build:
+      context: ./src/agents/researcher
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ORCHESTRATOR_URL=http://orchestrator:5000
+    volumes:
+      - ./src/agents/researcher:/app
+    depends_on:
+      - orchestrator
+    restart: unless-stopped
+
+  # Executor Agent
+  executor:
+    build:
+      context: ./src/agents/executor
+      dockerfile: Dockerfile
+    ports:
+      - "5002:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ORCHESTRATOR_URL=http://orchestrator:5000
+      - ODOO_URL=${ODOO_URL}
+      - ODOO_DB=${ODOO_DB}
+      - ODOO_USERNAME=${ODOO_USERNAME}
+      - ODOO_API_KEY=${ODOO_API_KEY}
+    volumes:
+      - ./src/agents/executor:/app
+    depends_on:
+      - orchestrator
+    restart: unless-stopped
+
+  # Integration API
+  integration:
+    build:
+      context: ./src/integration
+      dockerfile: Dockerfile
+    ports:
+      - "5003:5000"
+    environment:
+      - ODOO_URL=${ODOO_URL}
+      - ODOO_DB=${ODOO_DB}
+      - ODOO_USERNAME=${ODOO_USERNAME}
+      - ODOO_API_KEY=${ODOO_API_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+    volumes:
+      - ./src/integration:/app
+    restart: unless-stopped
+
+  # Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./infra/monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  # Visualization with Grafana
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./infra/monitoring/grafana:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
