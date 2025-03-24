@@ -1,0 +1,5 @@
+[33mcommit 529d7207c0d702ab26dcd44d14a54b647809e731[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: Your Name <your.email@example.com>
+Date:   Sun Mar 23 20:52:20 2025 -0400
+
+    Add database schemas for MongoDB and Supabase
