@@ -1,0 +1,103 @@
+Below is an updated diagram that explicitly shows **dynamic agent creation** via an Agent Builder or Factory mechanism. The CEO / Orchestrator calls the Agent Builder, which then spawns specialized agents on demand. These newly created agents integrate into the existing workflow just like the “static” agents.
+
+```mermaid
+flowchart TD
+    A[NiceGUI Dashboard] -->|Descriptive Prompts| B(CEO/Orchestrator Agent)
+    
+    %% Agent Builder
+    B -->|Requests new or specialized agents| AB(Agent Builder)
+    AB -->|Spawns new agent on demand| DN{New Specialized Agent}
+    DN --> DN1[Local RL Loop]
+    DN1 --> G(Learning Coordinator)
+    DN --> H(Shared Knowledge Base)
+    
+    %% Original Agents
+    B -->|Research tasks| C(Research Agent)
+    B -->|Dev tasks| D(Development Agent)
+    B -->|Communication tasks| E(Communication Agent)
+    B -->|API tasks| F(API Agent)
+
+    %% Local RL loops (existing static agents)
+    C --> C1[Local RL Loop]
+    D --> D1[Local RL Loop]
+    E --> E1[Local RL Loop]
+    F --> F1[Local RL Loop]
+
+    %% Agents -> Learning Coordinator
+    C1 --> G
+    D1 --> G
+    E1 --> G
+    F1 --> G
+
+    %% Learning Coordinator updates shared knowledge
+    G --> H(Shared Knowledge Base)
+    H -- Provides context --> C
+    H -- Provides context --> D
+    H -- Provides context --> E
+    H -- Provides context --> F
+    G -- System-wide adjustments --> B
+
+    %% PluginBoard/Wildcard integration
+    I(PluginBoard / Wildcard)
+    I --> C
+    I --> D
+    I --> E
+    I --> F
+    I --> DN
+
+    %% Infrastructure layer
+    J(managed Infrastructure) --> A
+    J --> B
+    J --> C
+    J --> D
+    J --> E
+    J --> F
+    J --> AB
+    J --> DN
+```
+
+## Diagram Explanation
+
+1. **CEO/Orchestrator Agent (B):**  
+   - Receives high-level objectives from the NiceGUI dashboard (A).  
+   - Delegates tasks to the specialized sub‑agents (research, dev, communication, API).
+
+2. **Agent Builder (AB):**  
+   - Invoked by the CEO/Orchestrator to dynamically create new agents based on immediate needs. For example, if a complex data-mining project arises, the CEO calls the builder to spawn a short-lived “DataMinerAgent” (see DN in the diagram).
+
+3. **New Specialized Agent (DN):**  
+   - Once spawned, this agent behaves similarly to the other “static” agents. It has its own local RL loop (DN1) to refine its performance.  
+   - Integrates with the system’s shared knowledge base (H) and can call external tools (PluginBoard/Wildcard, I) as needed.  
+   - Sends performance metrics to the Learning Coordinator (G).
+
+4. **Local RL Loops:**  
+   - Each agent, whether static (C, D, E, F) or dynamically spawned (DN), has a local reinforcement learning loop to make immediate adjustments based on success/failure.
+
+5. **Learning Coordinator (G):**  
+   - Collects performance data from every agent’s local RL loop.  
+   - Maintains a system-wide perspective, adjusting or updating the Shared Knowledge Base (H) and coordinating with the CEO agent (B) for macro-level changes.
+
+6. **Shared Knowledge Base (H):**  
+   - Aggregates real-time data, environment context, user feedback, etc.  
+   - Provides consistent, up-to-date info to all agents (both static and newly spawned).
+
+7. **PluginBoard/Wildcard (I):**  
+   - A layer of external tool integrations and API connectors for the entire system.  
+   - Agents can access these connectors to perform tasks like web scraping, database queries, or external service calls.
+
+8. **Syself-managed Infrastructure (J):**  
+   - Handles provisioning and scaling of all components, ensuring the system runs seamlessly in the cloud.  
+   - Makes it easy for a non-coder to deploy and manage these services with minimal manual configuration.
+
+## Key Takeaways
+
+- **Dynamic Agent Creation:**  
+  When the Orchestrator detects a specialized task that requires a new role (or more capacity), it calls the Agent Builder. The Builder spawns the appropriate agent (DN), which then integrates fully into the system (learning, knowledge, and tool access).
+  
+- **Scalability & Flexibility:**  
+  This design allows the system to scale horizontally—either by spinning up more instances of existing agents or by creating new roles. It also preserves the synergy between local RL (agents adapt individually) and global oversight (the Learning Coordinator updates the entire swarm).
+  
+- **Reduced Manual Overhead:**  
+  Since the entire system is orchestrated visually through the NiceGUI dashboard and deployed via Syself, non-coders can simply provide high-level instructions. The dynamic nature of agent creation eliminates the need to pre-define every possible role.
+
+This updated diagram clearly illustrates **how the Agent Builder spawns new agents on demand** and how those newly spawned agents integrate into the same learning, knowledge-sharing, and infrastructure framework as the rest of the system.
